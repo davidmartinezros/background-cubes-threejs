@@ -1,5 +1,7 @@
 import { Component, OnInit, ElementRef, ViewChild, HostListener } from '@angular/core';
 import { CubeGeometry, Scene, PointLight, PerspectiveCamera, Vector3, BoxBufferGeometry, MeshBasicMaterial, Mesh, WebGLRenderer, PCFSoftShadowMap, Color, DoubleSide, Vector2, Geometry, Face3 } from 'three';
+import { Cube } from './cube';
+import { Camera } from './camera';
 
 @Component({
   selector: 'app-root',
@@ -11,11 +13,11 @@ export class AppComponent implements OnInit {
 
   scene: Scene;
 
-  camera: PerspectiveCamera;
+  camera: Camera;
 
   renderer: WebGLRenderer;
 
-  cubes: Array<Mesh>;
+  cubes: Array<Cube>;
 
   colors: Array<Color>;
 
@@ -48,9 +50,10 @@ export class AppComponent implements OnInit {
   }
 
   private createCamera() {
-    this.camera = new PerspectiveCamera(55.0, window.innerWidth / window.innerHeight, 0.5, 300000);
-    this.camera.position.set(45, 35, 45);
-    this.camera.lookAt(new Vector3());
+    this.camera = new Camera();
+    this.camera.camera = new PerspectiveCamera(55.0, window.innerWidth / window.innerHeight, 0.5, 300000);
+    this.camera.camera.position.set(45, 35, 45);
+    this.camera.camera.lookAt(new Vector3());
   }
 
   private createLights() {
@@ -65,7 +68,7 @@ export class AppComponent implements OnInit {
 
   private loadCubes() {
     let color = 0;
-    for(let x = 0; x < 10; x++) {
+    for(let x = 0; x < 40; x++) {
       this.createCube(Math.random()*10, Math.random()*100-50, Math.random()*100-50, Math.random()*100-50, color);
       color++;
       if(color > 2) {
@@ -74,25 +77,93 @@ export class AppComponent implements OnInit {
     }
   }
 
+  moveCamera() {
+
+    if(!this.camera.dfRotateX) {
+      this.camera.dfRotateX = Math.random()-0.5;
+    }
+    if(!this.camera.dfRotateY) {
+      this.camera.dfRotateY = Math.random()-0.5;
+    }
+    if(!this.camera.dfRotateZ) {
+      this.camera.dfRotateZ = Math.random()-0.5;
+    }
+    if(!this.camera.dfTranslateX) {
+      this.camera.dfTranslateX = Math.random()-0.5;
+    }
+    if(!this.camera.dfTranslateY) {
+      this.camera.dfTranslateY = Math.random()-0.5;
+    }
+    if(!this.camera.dfTranslateZ) {
+      this.camera.dfTranslateZ = Math.random()-0.5;
+    }
+    
+    this.camera.camera.rotateX(this.camera.dfRotateX/30);
+    this.camera.camera.rotateY(this.camera.dfRotateY/30);
+    this.camera.camera.rotateZ(this.camera.dfRotateZ/30);
+
+    console.log(this.camera.dfRotateX);
+
+    this.camera.camera.translateX(this.camera.dfTranslateX/10);
+    this.camera.camera.translateY(this.camera.dfTranslateY/10);
+    this.camera.camera.translateZ(this.camera.dfTranslateZ/10);
+
+    console.log(this.camera.dfTranslateX);
+  }
+
   moveCubes() {
-    for(let x = 0; x < 10; x++) {
-      this.cubes[x].rotateX((Math.random()-0.5)/10);
-      this.cubes[x].rotateY((Math.random()-0.5)/10);
-      this.cubes[x].rotateZ((Math.random()-0.5)/10);
+    for(let cube of this.cubes) {
+      if(cube.mesh) {
+        if(!cube.dfRotateX) {
+          cube.dfRotateX = Math.random()-0.5;
+        }
+        if(!cube.dfRotateY) {
+          cube.dfRotateY = Math.random()-0.5;
+        }
+        if(!cube.dfRotateZ) {
+          cube.dfRotateZ = Math.random()-0.5;
+        }
+        if(!cube.dfTranslateX) {
+          cube.dfTranslateX = Math.random()-0.5;
+        }
+        if(!cube.dfTranslateY) {
+          cube.dfTranslateY = Math.random()-0.5;
+        }
+        if(!cube.dfTranslateZ) {
+          cube.dfTranslateZ = Math.random()-0.5;
+        }
+        
+        cube.mesh.rotateX(cube.dfRotateX/30);
+        cube.mesh.rotateY(cube.dfRotateY/30);
+        cube.mesh.rotateZ(cube.dfRotateZ/30);
+
+        cube.mesh.translateX(cube.dfTranslateX/10);
+        cube.mesh.translateY(cube.dfTranslateY/10);
+        cube.mesh.translateZ(cube.dfTranslateZ/10);
+
+        //console.log(this.cubes[x].totalRotateX);
+      }
     }
   }
 
   private createCube(size, translateX, translateY, translateZ, color) {
     let geometry = new BoxBufferGeometry(size, size, size, 1, 1, 1);
+    //material = new THREE.MeshBasicMaterial( { wireframe: true, opacity: 0.5 } );
     let material = new MeshBasicMaterial({
       color: this.colors[color],
-      side: DoubleSide});
-    let cube = new Mesh(geometry, material);
-    cube.rotation.x = Math.PI / 2;
-    cube.translateX(translateX);
-    cube.translateY(translateY);
-    cube.translateZ(translateZ);
-    this.scene.add(cube);
+      side: DoubleSide,
+      transparent: true,
+      wireframe: true,
+      opacity: 0.5
+    });
+    let mesh = new Mesh(geometry, material);
+    mesh.rotation.x = Math.PI / 2;
+    mesh.translateX(translateX);
+    mesh.translateY(translateY);
+    mesh.translateZ(translateZ);
+    this.scene.add(mesh);
+    let cube = new Cube();
+    cube.mesh = mesh;
     this.cubes.push(cube);
   }
 
@@ -140,7 +211,9 @@ export class AppComponent implements OnInit {
 
     this.moveCubes();
 
-    this.renderer.render(this.scene, this.camera);
+    this.moveCamera();
+
+    this.renderer.render(this.scene, this.camera.camera);
 
     requestAnimationFrame(this.render)
 
@@ -181,8 +254,8 @@ export class AppComponent implements OnInit {
       this.canvas.style.height = "100%";
       console.log("onResize: " + this.canvas.clientWidth + ", " + this.canvas.clientHeight);
 
-      this.camera.aspect = this.getAspectRatio();
-      this.camera.updateProjectionMatrix();
+      this.camera.camera.aspect = this.getAspectRatio();
+      this.camera.camera.updateProjectionMatrix();
       this.renderer.setSize(this.canvas.clientWidth, this.canvas.clientHeight);
   }
 
