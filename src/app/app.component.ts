@@ -1,7 +1,11 @@
 import { Component, OnInit, ElementRef, ViewChild, HostListener } from '@angular/core';
-import { CubeGeometry, Scene, PointLight, PerspectiveCamera, Vector3, BoxBufferGeometry, MeshBasicMaterial, Mesh, WebGLRenderer, PCFSoftShadowMap, Color, DoubleSide, Vector2, Geometry, Face3 } from 'three';
+import { CubeGeometry, Scene, PointLight, PerspectiveCamera, Vector3, BoxBufferGeometry, MeshBasicMaterial, Mesh, WebGLRenderer, PCFSoftShadowMap, Color, DoubleSide, Vector2, Geometry, Face3, Raycaster } from 'three';
+import "./js/EnableThreeExamples";
+import "three/examples/js/controls/OrbitControls";
 import { Cube } from './cube';
 import { Camera } from './camera';
+
+declare var THREE;
 
 @Component({
   selector: 'app-root',
@@ -9,13 +13,14 @@ import { Camera } from './camera';
   styleUrls: ['./app.component.css']
 })
 export class AppComponent implements OnInit {
-  title = 'app works!';
 
   scene: Scene;
 
   camera: Camera;
 
   renderer: WebGLRenderer;
+
+  controls: THREE.OrbitControls;
 
   cubes: Array<Cube>;
 
@@ -25,6 +30,7 @@ export class AppComponent implements OnInit {
 
   constructor() {
     this.render = this.render.bind(this);
+    this.renderControls = this.renderControls.bind(this);
     this.cubes = new Array();
     this.colorsPalette();
   }
@@ -37,22 +43,20 @@ export class AppComponent implements OnInit {
     this.scene = new Scene();
 
     this.loadCubes();
-
-    //this.createMeshInSquares();
     
     this.createCamera();
 
     this.createLights();
 
-    
-
     this.startRendering();
+
+    this.addControls();
   }
 
   private createCamera() {
     this.camera = new Camera();
     this.camera.camera = new PerspectiveCamera(55.0, window.innerWidth / window.innerHeight, 0.5, 300000);
-    this.camera.camera.position.set(45, 35, 45);
+    this.camera.camera.position.set(0, 0, -100);
     this.camera.camera.lookAt(new Vector3());
   }
 
@@ -102,13 +106,13 @@ export class AppComponent implements OnInit {
     this.camera.camera.rotateY(this.camera.dfRotateY/30);
     this.camera.camera.rotateZ(this.camera.dfRotateZ/30);
 
-    console.log(this.camera.dfRotateX);
+    //console.log(this.camera.dfRotateX);
 
     this.camera.camera.translateX(this.camera.dfTranslateX/10);
     this.camera.camera.translateY(this.camera.dfTranslateY/10);
     this.camera.camera.translateZ(this.camera.dfTranslateZ/10);
 
-    console.log(this.camera.dfTranslateX);
+    //console.log(this.camera.dfTranslateX);
   }
 
   moveCubes() {
@@ -133,21 +137,25 @@ export class AppComponent implements OnInit {
           cube.dfTranslateZ = Math.random()-0.5;
         }
         
-        cube.mesh.rotateX(cube.dfRotateX/30);
-        cube.mesh.rotateY(cube.dfRotateY/30);
-        cube.mesh.rotateZ(cube.dfRotateZ/30);
-
-        cube.mesh.translateX(cube.dfTranslateX/10);
-        cube.mesh.translateY(cube.dfTranslateY/10);
-        cube.mesh.translateZ(cube.dfTranslateZ/10);
-
+        if(cube.stopRotate == false) {
+          //console.log("aa:" + cube.stopRotate);
+          cube.mesh.rotateX(cube.dfRotateX/30);
+          cube.mesh.rotateY(cube.dfRotateY/30);
+          cube.mesh.rotateZ(cube.dfRotateZ/30);
+        }
+        if(cube.stopTranslate == false) {
+          //console.log("aa:" + cube.stopTranslate);
+          cube.mesh.translateX(cube.dfTranslateX/10);
+          cube.mesh.translateY(cube.dfTranslateY/10);
+          cube.mesh.translateZ(cube.dfTranslateZ/10);
+        }
         //console.log(this.cubes[x].totalRotateX);
       }
     }
   }
 
   private createCube(size, translateX, translateY, translateZ, color) {
-    let geometry = new BoxBufferGeometry(size, size, size, 1, 1, 1);
+    let geometry = new BoxBufferGeometry(size, size, size, 2, 2, 2);
     //material = new THREE.MeshBasicMaterial( { wireframe: true, opacity: 0.5 } );
     let material = new MeshBasicMaterial({
       color: this.colors[color],
@@ -164,39 +172,11 @@ export class AppComponent implements OnInit {
     this.scene.add(mesh);
     let cube = new Cube();
     cube.mesh = mesh;
+    cube.stopRotate = false;
+    cube.stopTranslate = false;
+    cube.changed = false;
+    cube.size = size;
     this.cubes.push(cube);
-  }
-
-  private createSquare(x,y,z) {
-    let squareGeometry = new Geometry();
-    squareGeometry.vertices.push(new Vector3(10*x, 0.0, 10*z)); 
-    squareGeometry.vertices.push(new Vector3(10*(x+1), 0.0, 10*z)); 
-    squareGeometry.vertices.push(new Vector3(10*(x+1), 0.0, 10*(z-1))); 
-    squareGeometry.vertices.push(new Vector3(10*x, 0.0, 10*(z-1)));
-    squareGeometry.faces.push(new Face3(0, 1, 2)); 
-    squareGeometry.faces.push(new Face3(0, 3, 2));
-    squareGeometry.faceVertexUvs[ 0 ].push( [
-        new Vector2( 0, 0 ),
-        new Vector2( 0, 1 ),
-        new Vector2( 1, 1 ),
-        new Vector2( 1, 0 )
-    ] );
-
-    let material = new MeshBasicMaterial({
-        color: new Color(0xff0000),
-        side: DoubleSide, 
-        wireframe: true});
-    let mesh = new Mesh( squareGeometry, material );
-    this.scene.add(mesh);
-  }
-
-  private createMeshInSquares() {
-      
-      for(let x= -10; x < 10; x++) {
-          for(let z= 10; z > -10; z--) {
-              this.createSquare(x,0,z);
-          }
-      }
   }
 
   private colorsPalette() {
@@ -207,16 +187,27 @@ export class AppComponent implements OnInit {
   }
 
   public render() {
-    console.log("render");
+    //console.log("render");
 
     this.moveCubes();
 
-    this.moveCamera();
+    //this.moveCamera();
 
     this.renderer.render(this.scene, this.camera.camera);
 
-    requestAnimationFrame(this.render)
+    requestAnimationFrame(this.render);
 
+  }
+
+  renderControls() {
+    this.renderer.render( this.scene, this.camera.camera );
+  }
+
+  public addControls() {
+      this.controls = new THREE.OrbitControls(this.camera.camera);
+      this.controls.rotateSpeed = 1.0;
+      this.controls.zoomSpeed = 1.2;
+      this.controls.addEventListener('change', this.renderControls);
   }
 
   private startRendering() {    
@@ -240,10 +231,56 @@ export class AppComponent implements OnInit {
   }
 
   public onMouseDown(event: MouseEvent) {
-      console.log("onMouseDown");
-      event.preventDefault();
+    console.log("onMouseDown");
+    event.preventDefault();
+
+    // Example of mesh selection/pick:
+    var raycaster = new Raycaster();
+    var mouse = new Vector2();
+    mouse.x = (event.clientX / this.renderer.domElement.clientWidth) * 2 - 1;
+    mouse.y = - (event.clientY / this.renderer.domElement.clientHeight) * 2 + 1;
+    raycaster.setFromCamera(mouse, this.camera.camera);
+
+    var obj: THREE.Object3D[] = [];
+    this.findAllObjects(obj, this.scene);
+    var intersects = raycaster.intersectObjects(obj);
+    console.log("Scene has " + obj.length + " objects");
+    console.log(intersects.length + " intersected objects found")
+    intersects.forEach((i) => {
+        //console.log(i.object); // do what you want to do with object
+        //i.object.position.y = i.object.position.y + 1;
+        let cubesTmp: Cube[];
+        cubesTmp = this.cubes.filter(cube => cube.mesh === i.object)
+        if(cubesTmp.length > 0) {
+          //console.log(cubesTmp[0].stopTranslate);
+          if(!cubesTmp[0].changed) {
+            cubesTmp[0].stopTranslate = !cubesTmp[0].stopTranslate;
+            cubesTmp[0].stopRotate = !cubesTmp[0].stopRotate;
+            cubesTmp[0].changed = true;
+            console.log(cubesTmp[0].stopTranslate);
+          }
+        }
+    });
+    this.setAllChangedsToFalse();
+    this.renderControls();
   }
 
+  private setAllChangedsToFalse() {
+    for(let cube of this.cubes) {
+      cube.changed = false;
+    }
+  }
+
+  private findAllObjects(pred: THREE.Object3D[], parent: THREE.Object3D) {
+      // NOTE: Better to keep separate array of selected objects
+      if (parent.children.length > 0) {
+          parent.children.forEach((i) => {
+              pred.push(i);
+              this.findAllObjects(pred, i);                
+          });
+      }
+  }
+  
   public onMouseUp(event: MouseEvent) {
       console.log("onMouseUp");
   }
@@ -257,6 +294,7 @@ export class AppComponent implements OnInit {
       this.camera.camera.aspect = this.getAspectRatio();
       this.camera.camera.updateProjectionMatrix();
       this.renderer.setSize(this.canvas.clientWidth, this.canvas.clientHeight);
+      this.renderControls();
   }
 
   @HostListener('document:keypress', ['$event'])
