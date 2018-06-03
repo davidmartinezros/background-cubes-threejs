@@ -153,7 +153,7 @@ export class AppComponent implements OnInit {
           cube.mesh.translateZ(cube.dfTranslateZ/10);
           cube.line.translateX(cube.dfTranslateX/10);
           cube.line.translateY(cube.dfTranslateY/10);
-          cube.line.translateZ(cube.dfTranslateZ/10);
+          cube.line .translateZ(cube.dfTranslateZ/10);
         }
         //console.log(this.cubes[x].totalRotateX);
       }
@@ -161,7 +161,7 @@ export class AppComponent implements OnInit {
   }
 
   private createCube(size, translateX, translateY, translateZ, color) {
-    let geometry = new BoxBufferGeometry(size, size, size, 2, 2, 2);
+    let geometry = new BoxBufferGeometry(size, size, size, 1, 1, 1);
     //material = new THREE.MeshBasicMaterial( { wireframe: true, opacity: 0.5 } );
     let material2 = new ShaderMaterial({
       /*lights: true,*/
@@ -242,7 +242,7 @@ export class AppComponent implements OnInit {
         antialias: true,
     });
     this.renderer.setPixelRatio(devicePixelRatio);
-    this.renderer.setSize(this.canvas.clientWidth, this.canvas.clientHeight);
+    this.renderer.setSize( window.innerWidth - 2, window.innerHeight - 6 );
 
     this.renderer.shadowMap.enabled = true;
     this.renderer.shadowMap.type = PCFSoftShadowMap;
@@ -313,14 +313,13 @@ export class AppComponent implements OnInit {
 
   @HostListener('window:resize', ['$event'])
   public onResize(event: Event) {
-      this.canvas.style.width = "100%";
-      this.canvas.style.height = "100%";
-      console.log("onResize: " + this.canvas.clientWidth + ", " + this.canvas.clientHeight);
+
+      console.log("onResize: " + (window.innerWidth - 2) + ", "  + (window.innerHeight - 6));
 
       this.camera.camera.aspect = this.getAspectRatio();
       this.camera.camera.updateProjectionMatrix();
-      this.renderer.setSize(this.canvas.clientWidth, this.canvas.clientHeight);
-      this.renderControls();
+      this.renderer.setSize(window.innerWidth - 2, window.innerHeight - 6);
+      this.render();
   }
 
   @HostListener('document:keypress', ['$event'])
