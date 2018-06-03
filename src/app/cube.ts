@@ -1,7 +1,8 @@
-import { Mesh } from "three";
+import { Mesh, LineSegments } from "three";
 
 export class Cube {
     mesh: Mesh;
+    line: LineSegments;
     size: number;
     dfRotateX: number;
     dfRotateY: number;

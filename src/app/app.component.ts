@@ -1,5 +1,5 @@
 import { Component, OnInit, ElementRef, ViewChild, HostListener } from '@angular/core';
-import { CubeGeometry, Scene, PointLight, PerspectiveCamera, Vector3, BoxBufferGeometry, MeshBasicMaterial, Mesh, WebGLRenderer, PCFSoftShadowMap, Color, DoubleSide, Vector2, Geometry, Face3, Raycaster } from 'three';
+import { CubeGeometry, Scene, PointLight, PerspectiveCamera, Vector3, BoxBufferGeometry, MeshBasicMaterial, Mesh, WebGLRenderer, PCFSoftShadowMap, Color, DoubleSide, Vector2, Geometry, Face3, Raycaster, ShaderMaterial, EdgesGeometry, LineSegments } from 'three';
 import "./js/EnableThreeExamples";
 import "three/examples/js/controls/OrbitControls";
 import { Cube } from './cube';
@@ -142,12 +142,18 @@ export class AppComponent implements OnInit {
           cube.mesh.rotateX(cube.dfRotateX/30);
           cube.mesh.rotateY(cube.dfRotateY/30);
           cube.mesh.rotateZ(cube.dfRotateZ/30);
+          cube.line.rotateX(cube.dfRotateX/30);
+          cube.line.rotateY(cube.dfRotateY/30);
+          cube.line.rotateZ(cube.dfRotateZ/30);
         }
         if(cube.stopTranslate == false) {
           //console.log("aa:" + cube.stopTranslate);
           cube.mesh.translateX(cube.dfTranslateX/10);
           cube.mesh.translateY(cube.dfTranslateY/10);
           cube.mesh.translateZ(cube.dfTranslateZ/10);
+          cube.line.translateX(cube.dfTranslateX/10);
+          cube.line.translateY(cube.dfTranslateY/10);
+          cube.line.translateZ(cube.dfTranslateZ/10);
         }
         //console.log(this.cubes[x].totalRotateX);
       }
@@ -157,26 +163,46 @@ export class AppComponent implements OnInit {
   private createCube(size, translateX, translateY, translateZ, color) {
     let geometry = new BoxBufferGeometry(size, size, size, 2, 2, 2);
     //material = new THREE.MeshBasicMaterial( { wireframe: true, opacity: 0.5 } );
+    let material2 = new ShaderMaterial({
+      /*lights: true,*/
+      lineWidth: 1.2,
+      side: DoubleSide,
+      transparent: true,
+      wireframe: true,
+      opacity: 0.5,
+      depthWrite: false,
+      depthTest: false
+    });
     let material = new MeshBasicMaterial({
       color: this.colors[color],
       side: DoubleSide,
       transparent: true,
-      wireframe: true,
       opacity: 0.5
     });
+/*
+    var geometry1 = new EdgesGeometry(geometry, 0);
+    var material = new MeshBasicMaterial( {color: 0x00ff00} );
+*/
     let mesh = new Mesh(geometry, material);
     mesh.rotation.x = Math.PI / 2;
     mesh.translateX(translateX);
     mesh.translateY(translateY);
     mesh.translateZ(translateZ);
     this.scene.add(mesh);
+    var line = new LineSegments( geometry, new THREE.LineBasicMaterial( { color: 0xffffff } ) );
+    line.rotation.x = Math.PI / 2;
+    line.translateX(translateX);
+    line.translateY(translateY);
+    line.translateZ(translateZ);
     let cube = new Cube();
     cube.mesh = mesh;
+    cube.line = line;
     cube.stopRotate = false;
     cube.stopTranslate = false;
     cube.changed = false;
-    cube.size = size;
+    //cube.size = size;
     this.cubes.push(cube);
+    this.scene.add(line);
   }
 
   private colorsPalette() {
