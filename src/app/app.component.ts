@@ -1,5 +1,5 @@
 import { Component, OnInit, ElementRef, ViewChild, HostListener } from '@angular/core';
-import { CubeGeometry, Scene, PointLight, PerspectiveCamera, Vector3, BoxBufferGeometry, MeshBasicMaterial, Mesh, WebGLRenderer, PCFSoftShadowMap, Color, DoubleSide, Vector2, Geometry, Face3, Raycaster, ShaderMaterial, EdgesGeometry, LineSegments, Box3, Ray, BoxGeometry, Matrix4, Matrix3 } from 'three';
+import { CubeGeometry, Scene, PointLight, PerspectiveCamera, Vector3, BoxBufferGeometry, MeshBasicMaterial, Mesh, WebGLRenderer, PCFSoftShadowMap, Color, DoubleSide, Vector2, Geometry, Face3, Raycaster, ShaderMaterial, EdgesGeometry, LineSegments, Box3, Ray, BoxGeometry, Matrix4, Matrix3, SphereGeometry, CylinderGeometry, RingGeometry, TorusGeometry, Line3, Line } from 'three';
 import "./js/EnableThreeExamples";
 import "three/examples/js/controls/OrbitControls";
 import { Cube } from './cube';
@@ -24,6 +24,8 @@ export class AppComponent implements OnInit {
 
   cubes: Array<Cube>;
 
+  lines: Array<Line>;
+
   colors: Array<Color>;
 
   @ViewChild('canvas') private canvasRef: ElementRef;
@@ -32,6 +34,7 @@ export class AppComponent implements OnInit {
     this.render = this.render.bind(this);
     this.renderControls = this.renderControls.bind(this);
     this.cubes = new Array();
+    this.lines = new Array();
     this.colorsPalette();
   }
 
@@ -43,6 +46,14 @@ export class AppComponent implements OnInit {
     this.scene = new Scene();
 
     this.loadCubes();
+
+    this.loadSpheres();
+
+    this.loadCilindres();
+
+    this.loadTorus();
+
+    //this.loadLines();
     
     this.createCamera();
 
@@ -72,8 +83,41 @@ export class AppComponent implements OnInit {
 
   private loadCubes() {
     let color = 0;
-    for(let x = 0; x < 40; x++) {
+    for(let x = 0; x < 5; x++) {
       this.createCube(Math.random()*10, Math.random()*100-50, Math.random()*100-50, Math.random()*100-50, color);
+      color++;
+      if(color > 2) {
+        color = 0;
+      }
+    }
+  }
+
+  private loadSpheres() {
+    let color = 0;
+    for(let x = 0; x < 5; x++) {
+      this.createSphere(Math.random()*10, Math.random()*100-50, Math.random()*100-50, Math.random()*100-50, color);
+      color++;
+      if(color > 2) {
+        color = 0;
+      }
+    }
+  }
+
+  private loadCilindres() {
+    let color = 0;
+    for(let x = 0; x < 5; x++) {
+      this.createCilindre(Math.random()*10, Math.random()*10, Math.random()*10, Math.random()*100-50, Math.random()*100-50, Math.random()*100-50, color);
+      color++;
+      if(color > 2) {
+        color = 0;
+      }
+    }
+  }
+
+  private loadTorus() {
+    let color = 0;
+    for(let x = 0; x < 5; x++) {
+      this.createTorus(Math.random()*10, Math.random(), Math.random()*100-50, Math.random()*100-50, Math.random()*100-50, color);
       color++;
       if(color > 2) {
         color = 0;
@@ -162,27 +206,102 @@ export class AppComponent implements OnInit {
 
   private createCube(size, translateX, translateY, translateZ, color) {
     let geometry = new BoxGeometry(size, size, size, 1, 1, 1);
-    //material = new THREE.MeshBasicMaterial( { wireframe: true, opacity: 0.5 } );
-    let material2 = new ShaderMaterial({
-      /*lights: true,*/
-      lineWidth: 1.2,
-      side: DoubleSide,
-      transparent: true,
-      wireframe: true,
-      opacity: 0.5,
-      depthWrite: false,
-      depthTest: false
-    });
     let material = new MeshBasicMaterial({
       color: this.colors[color],
       side: DoubleSide,
       transparent: true,
       opacity: 0.5
     });
-/*
-    var geometry1 = new EdgesGeometry(geometry, 0);
-    var material = new MeshBasicMaterial( {color: 0x00ff00} );
-*/
+    let mesh = new Mesh(geometry, material);
+    mesh.rotation.x = Math.PI / 2;
+    mesh.translateX(translateX);
+    mesh.translateY(translateY);
+    mesh.translateZ(translateZ);
+    this.scene.add(mesh);
+    var line = new LineSegments( geometry, new THREE.LineBasicMaterial( { color: 0xffffff } ) );
+    line.rotation.x = Math.PI / 2;
+    line.translateX(translateX);
+    line.translateY(translateY);
+    line.translateZ(translateZ);
+    let cube = new Cube();
+    cube.mesh = mesh;
+    cube.line = line;
+    cube.stopRotate = false;
+    cube.stopTranslate = false;
+    cube.changed = false;
+    //cube.size = size;
+    this.cubes.push(cube);
+    this.scene.add(line);
+  }
+
+  private createSphere(size, translateX, translateY, translateZ, color) {
+    let geometry = new SphereGeometry(size, 10, 10);
+    let material = new MeshBasicMaterial({
+      color: this.colors[color],
+      side: DoubleSide,
+      transparent: true,
+      opacity: 0.5
+    });
+    let mesh = new Mesh(geometry, material);
+    mesh.rotation.x = Math.PI / 2;
+    mesh.translateX(translateX);
+    mesh.translateY(translateY);
+    mesh.translateZ(translateZ);
+    this.scene.add(mesh);
+    var line = new LineSegments( geometry, new THREE.LineBasicMaterial( { color: 0xffffff } ) );
+    line.rotation.x = Math.PI / 2;
+    line.translateX(translateX);
+    line.translateY(translateY);
+    line.translateZ(translateZ);
+    let cube = new Cube();
+    cube.mesh = mesh;
+    cube.line = line;
+    cube.stopRotate = false;
+    cube.stopTranslate = false;
+    cube.changed = false;
+    //cube.size = size;
+    this.cubes.push(cube);
+    this.scene.add(line);
+  }
+
+  private createCilindre(radius1, radius2, height, translateX, translateY, translateZ, color) {
+    let geometry = new CylinderGeometry(radius1, radius2, height, 10, 1);
+    let material = new MeshBasicMaterial({
+      color: this.colors[color],
+      side: DoubleSide,
+      transparent: true,
+      opacity: 0.5
+    });
+    let mesh = new Mesh(geometry, material);
+    mesh.rotation.x = Math.PI / 2;
+    mesh.translateX(translateX);
+    mesh.translateY(translateY);
+    mesh.translateZ(translateZ);
+    this.scene.add(mesh);
+    var line = new LineSegments( geometry, new THREE.LineBasicMaterial( { color: 0xffffff } ) );
+    line.rotation.x = Math.PI / 2;
+    line.translateX(translateX);
+    line.translateY(translateY);
+    line.translateZ(translateZ);
+    let cube = new Cube();
+    cube.mesh = mesh;
+    cube.line = line;
+    cube.stopRotate = false;
+    cube.stopTranslate = false;
+    cube.changed = false;
+    //cube.size = size;
+    this.cubes.push(cube);
+    this.scene.add(line);
+  }
+
+  private createTorus(radius, tube, translateX, translateY, translateZ, color) {
+    let geometry = new TorusGeometry(radius, tube, 10, 10);
+    let material = new MeshBasicMaterial({
+      color: this.colors[color],
+      side: DoubleSide,
+      transparent: true,
+      opacity: 0.5
+    });
     let mesh = new Mesh(geometry, material);
     mesh.rotation.x = Math.PI / 2;
     mesh.translateX(translateX);
@@ -217,7 +336,9 @@ export class AppComponent implements OnInit {
 
     this.moveCubes();
 
-    this.detectCollisions();
+    //this.detectCollisions();
+
+    //this.projectLines();
 
     //this.moveCamera();
 
@@ -341,8 +462,17 @@ export class AppComponent implements OnInit {
     for(let cube of this.cubes) {
       let boxEval: Box3 = cube.mesh.geometry.boundingBox;
       let position: Vector3 = cube.mesh.position;
-      let geom: BoxGeometry = <BoxGeometry>cube.mesh.geometry;
-      //console.log(geom);
+      let geom: Geometry;
+      if(cube.mesh.geometry instanceof BoxGeometry) {
+        geom = <BoxGeometry>cube.mesh.geometry;
+      } else if(cube.mesh.geometry instanceof SphereGeometry) {
+        geom = <SphereGeometry>cube.mesh.geometry;
+      } else if(cube.mesh.geometry instanceof CylinderGeometry) {
+        geom = <CylinderGeometry>cube.mesh.geometry;
+      } else if(cube.mesh.geometry instanceof TorusGeometry) {
+        geom = <TorusGeometry>cube.mesh.geometry;
+      }
+        //console.log(geom);
       //console.log(geom.vertices);
       for (var vertexIndex = 0; vertexIndex < geom.vertices.length; vertexIndex++) {  
         var matrix: Matrix3 = new Matrix3();
@@ -364,6 +494,42 @@ export class AppComponent implements OnInit {
             cube.dfTranslateZ = (-1)*cube.dfTranslateZ;
         }
       }
+    }
+  }
+
+  private loadLines() {
+    for(let cube1 of this.cubes) {
+      let position1: Vector3 = cube1.mesh.position;
+      for(let cube2 of this.cubes) {
+        let position2: Vector3 = cube2.mesh.position;
+        var geometry = new THREE.Geometry();
+        geometry.vertices.push(position1);
+        geometry.vertices.push(position2);
+        this.lines.push(new Line(geometry));
+      }
+    }
+    for(let line of this.lines) {
+      this.scene.add(line);
+    }
+  }
+
+  private projectLines() {
+    for(let line of this.lines) {
+      this.scene.remove(line);
+    }
+    this.lines = new Array();
+    for(let cube1 of this.cubes) {
+      let position1: Vector3 = cube1.mesh.position;
+      for(let cube2 of this.cubes) {
+        let position2: Vector3 = cube2.mesh.position;
+        var geometry = new THREE.Geometry();
+        geometry.vertices.push(position1);
+        geometry.vertices.push(position2);
+        this.lines.push(new Line(geometry));
+      }
+    }
+    for(let line of this.lines) {
+      this.scene.add(line);
     }
   }
 
