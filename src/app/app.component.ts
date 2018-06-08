@@ -1,5 +1,5 @@
 import { Component, OnInit, ElementRef, ViewChild, HostListener } from '@angular/core';
-import { CubeGeometry, Scene, PointLight, PerspectiveCamera, Vector3, BoxBufferGeometry, MeshBasicMaterial, Mesh, WebGLRenderer, PCFSoftShadowMap, Color, DoubleSide, Vector2, Geometry, Face3, Raycaster, ShaderMaterial, EdgesGeometry, LineSegments } from 'three';
+import { CubeGeometry, Scene, PointLight, PerspectiveCamera, Vector3, BoxBufferGeometry, MeshBasicMaterial, Mesh, WebGLRenderer, PCFSoftShadowMap, Color, DoubleSide, Vector2, Geometry, Face3, Raycaster, ShaderMaterial, EdgesGeometry, LineSegments, Box3, Ray, BoxGeometry, Matrix4, Matrix3 } from 'three';
 import "./js/EnableThreeExamples";
 import "three/examples/js/controls/OrbitControls";
 import { Cube } from './cube';
@@ -161,7 +161,7 @@ export class AppComponent implements OnInit {
   }
 
   private createCube(size, translateX, translateY, translateZ, color) {
-    let geometry = new BoxBufferGeometry(size, size, size, 1, 1, 1);
+    let geometry = new BoxGeometry(size, size, size, 1, 1, 1);
     //material = new THREE.MeshBasicMaterial( { wireframe: true, opacity: 0.5 } );
     let material2 = new ShaderMaterial({
       /*lights: true,*/
@@ -216,6 +216,8 @@ export class AppComponent implements OnInit {
     //console.log("render");
 
     this.moveCubes();
+
+    this.detectCollisions();
 
     //this.moveCamera();
 
@@ -333,6 +335,36 @@ export class AppComponent implements OnInit {
         return 0;
     }
     return this.canvas.clientWidth / this.canvas.clientHeight;
+  }
+
+  private detectCollisions() {
+    for(let cube of this.cubes) {
+      let boxEval: Box3 = cube.mesh.geometry.boundingBox;
+      let position: Vector3 = cube.mesh.position;
+      let geom: BoxGeometry = <BoxGeometry>cube.mesh.geometry;
+      //console.log(geom);
+      //console.log(geom.vertices);
+      for (var vertexIndex = 0; vertexIndex < geom.vertices.length; vertexIndex++) {  
+        var matrix: Matrix3 = new Matrix3();
+        var localVertex = geom.vertices[vertexIndex].clone();
+        var globalVertex = localVertex.applyMatrix3(matrix);
+        var directionVector = globalVertex.sub( position );
+        var ray = new Raycaster( position, directionVector.clone().normalize() );
+        this.scene.updateMatrixWorld(true);
+        var collisionResults = ray.intersectObjects( this.scene.children, true );
+        if ( collisionResults.length > 0 && collisionResults[0].distance < directionVector.length() ) 
+        {
+            // a collision occurred... do something...
+            //console.log("colisio detectada");
+            cube.dfRotateX = (-1)*cube.dfRotateX;
+            cube.dfRotateY = (-1)*cube.dfRotateY;
+            cube.dfRotateZ = (-1)*cube.dfRotateZ;
+            cube.dfTranslateX = (-1)*cube.dfTranslateX;
+            cube.dfTranslateY = (-1)*cube.dfTranslateY;
+            cube.dfTranslateZ = (-1)*cube.dfTranslateZ;
+        }
+      }
+    }
   }
 
 }
