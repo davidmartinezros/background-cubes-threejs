@@ -1,5 +1,5 @@
 import { Component, OnInit, ElementRef, ViewChild, HostListener } from '@angular/core';
-import { CubeGeometry, Scene, PointLight, PerspectiveCamera, Vector3, BoxBufferGeometry, MeshBasicMaterial, Mesh, WebGLRenderer, PCFSoftShadowMap, Color, DoubleSide, Vector2, Geometry, Face3, Raycaster, ShaderMaterial, EdgesGeometry, LineSegments } from 'three';
+import { CubeGeometry, Scene, PointLight, PerspectiveCamera, Vector3, BoxBufferGeometry, MeshBasicMaterial, Mesh, WebGLRenderer, PCFSoftShadowMap, Color, DoubleSide, Vector2, Geometry, Face3, Raycaster, ShaderMaterial, LineSegments, Box3, Ray, BoxGeometry, Matrix4, Matrix3, Line3, Line } from 'three';
 import "./js/EnableThreeExamples";
 import "three/examples/js/controls/OrbitControls";
 import { Cube } from './cube';
@@ -24,6 +24,8 @@ export class AppComponent implements OnInit {
 
   cubes: Array<Cube>;
 
+  lines: Array<Line>;
+
   colors: Array<Color>;
 
   @ViewChild('canvas') private canvasRef: ElementRef;
@@ -32,6 +34,7 @@ export class AppComponent implements OnInit {
     this.render = this.render.bind(this);
     this.renderControls = this.renderControls.bind(this);
     this.cubes = new Array();
+    this.lines = new Array();
     this.colorsPalette();
   }
 
@@ -43,6 +46,8 @@ export class AppComponent implements OnInit {
     this.scene = new Scene();
 
     this.loadCubes();
+
+    //this.loadLines();
     
     this.createCamera();
 
@@ -72,7 +77,7 @@ export class AppComponent implements OnInit {
 
   private loadCubes() {
     let color = 0;
-    for(let x = 0; x < 40; x++) {
+    for(let x = 0; x < 5; x++) {
       this.createCube(Math.random()*10, Math.random()*100-50, Math.random()*100-50, Math.random()*100-50, color);
       color++;
       if(color > 2) {
@@ -161,28 +166,13 @@ export class AppComponent implements OnInit {
   }
 
   private createCube(size, translateX, translateY, translateZ, color) {
-    let geometry = new BoxBufferGeometry(size, size, size, 1, 1, 1);
-    //material = new THREE.MeshBasicMaterial( { wireframe: true, opacity: 0.5 } );
-    let material2 = new ShaderMaterial({
-      /*lights: true,*/
-      lineWidth: 1.2,
-      side: DoubleSide,
-      transparent: true,
-      wireframe: true,
-      opacity: 0.5,
-      depthWrite: false,
-      depthTest: false
-    });
+    let geometry = new BoxGeometry(size, size, size, 1, 1, 1);
     let material = new MeshBasicMaterial({
       color: this.colors[color],
       side: DoubleSide,
       transparent: true,
       opacity: 0.5
     });
-/*
-    var geometry1 = new EdgesGeometry(geometry, 0);
-    var material = new MeshBasicMaterial( {color: 0x00ff00} );
-*/
     let mesh = new Mesh(geometry, material);
     mesh.rotation.x = Math.PI / 2;
     mesh.translateX(translateX);
