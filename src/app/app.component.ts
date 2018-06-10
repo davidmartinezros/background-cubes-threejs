@@ -77,7 +77,7 @@ export class AppComponent implements OnInit {
 
   private loadCubes() {
     let color = 0;
-    for(let x = 0; x < 5; x++) {
+    for(let x = 0; x < 40; x++) {
       this.createCube(Math.random()*10, Math.random()*100-50, Math.random()*100-50, Math.random()*100-50, color);
       color++;
       if(color > 2) {
